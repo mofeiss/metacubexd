@@ -231,5 +231,11 @@
   "yamlEditorUnsavedConfirm": "Есть несохранённые изменения YAML. Покинуть страницу?",
   "yamlEditorUnsaved": "Есть несохранённые изменения",
   "yamlEditorNoChanges": "Нет несохранённых изменений",
+  "yamlEditorFetchFromNetwork": "Загрузить из сети",
+  "yamlEditorFetchFromNetworkTitle": "Загрузить конфигурацию из сети",
+  "yamlEditorFetchFromNetworkSuccess": "Загружено из сети, проверьте и сохраните",
+  "yamlEditorFetchFromNetworkFailed": "Не удалось загрузить из сети",
+  "confirm": "ОК",
+  "cancel": "Отмена",
   "yamlEditorBytes": "Байт: {count}"
 }

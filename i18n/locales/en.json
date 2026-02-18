@@ -231,6 +231,12 @@
   "yamlEditorUnsavedConfirm": "You have unsaved YAML changes. Leave this page?",
   "yamlEditorUnsaved": "Unsaved changes",
   "yamlEditorNoChanges": "No unsaved changes",
+  "yamlEditorFetchFromNetwork": "Fetch from URL",
+  "yamlEditorFetchFromNetworkTitle": "Fetch Config from URL",
+  "yamlEditorFetchFromNetworkSuccess": "Fetched from URL, please review and save",
+  "yamlEditorFetchFromNetworkFailed": "Failed to fetch from URL",
+  "confirm": "OK",
+  "cancel": "Cancel",
   "yamlEditorBytes": "Bytes: {count}",
   "shortcuts": {
     "title": "Keyboard Shortcuts",

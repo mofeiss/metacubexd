@@ -231,6 +231,12 @@
   "yamlEditorUnsavedConfirm": "当前 YAML 有未保存修改，确定离开此页面吗？",
   "yamlEditorUnsaved": "存在未保存修改",
   "yamlEditorNoChanges": "无未保存修改",
+  "yamlEditorFetchFromNetwork": "从网络读取",
+  "yamlEditorFetchFromNetworkTitle": "从网络读取配置",
+  "yamlEditorFetchFromNetworkSuccess": "已从网络读取，请检查内容后保存",
+  "yamlEditorFetchFromNetworkFailed": "从网络读取失败",
+  "confirm": "确定",
+  "cancel": "取消",
   "yamlEditorBytes": "字节数: {count}",
   "shortcuts": {
     "title": "键盘快捷键",

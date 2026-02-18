@@ -125,6 +125,12 @@ const providersTotalSize = computed(() =>
   providersVirtualizer.value.getTotalSize(),
 )
 
+const remoteConfigUrl = useLocalStorage('remoteConfigUrl', '')
+const showFetchModal = ref(false)
+const fetchModalUrl = ref('')
+const fetchingRemote = ref(false)
+const fetchModalRef = ref<HTMLDialogElement>()
+
 const yamlContent = ref('')
 const originalYamlContent = ref('')
 const yamlMtimeMs = ref<number | null>(null)
@@ -205,6 +211,49 @@ async function saveMihomoConfigFile() {
   }
 }
 
+function openFetchModal() {
+  fetchModalUrl.value = remoteConfigUrl.value
+  showFetchModal.value = true
+  nextTick(() => fetchModalRef.value?.showModal())
+}
+
+function closeFetchModal() {
+  showFetchModal.value = false
+  fetchModalRef.value?.close()
+}
+
+async function fetchFromRemoteUrl() {
+  if (!fetchModalUrl.value) return
+
+  fetchingRemote.value = true
+  yamlStatus.value = null
+
+  try {
+    const result = await $fetch<{ content: string }>('/api/fetch-remote', {
+      query: { url: fetchModalUrl.value },
+    })
+
+    yamlContent.value = result.content
+    remoteConfigUrl.value = fetchModalUrl.value
+    closeFetchModal()
+
+    yamlStatus.value = {
+      type: 'success',
+      message: t('yamlEditorFetchFromNetworkSuccess'),
+    }
+  } catch (error) {
+    yamlStatus.value = {
+      type: 'error',
+      message: parseRequestErrorMessage(
+        error,
+        t('yamlEditorFetchFromNetworkFailed'),
+      ),
+    }
+  } finally {
+    fetchingRemote.value = false
+  }
+}
+
 async function reloadMihomoCoreConfig() {
   yamlReloading.value = true
   yamlStatus.value = null
@@ -279,8 +328,17 @@ onBeforeRouteLeave(() => {
           <div class="flex items-center gap-2">
             <Button
               class="btn-outline"
+              :disabled="
+                yamlLoading || yamlSaving || yamlReloading || fetchingRemote
+              "
+              @click="openFetchModal"
+            >
+              {{ t('yamlEditorFetchFromNetwork') }}
+            </Button>
+            <Button
+              class="btn-outline"
               :loading="yamlLoading"
-              :disabled="yamlSaving || yamlReloading"
+              :disabled="yamlSaving || yamlReloading || fetchingRemote"
               @click="loadMihomoConfigFile"
             >
               {{ t('yamlEditorReloadFile') }}
@@ -559,6 +617,49 @@ onBeforeRouteLeave(() => {
         </div>
       </div>
     </template>
+
+    <!-- Fetch from URL Modal -->
+    <dialog
+      ref="fetchModalRef"
+      class="modal modal-bottom sm:modal-middle"
+      @close="showFetchModal = false"
+    >
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">
+          {{ t('yamlEditorFetchFromNetworkTitle') }}
+        </h3>
+        <div class="py-4">
+          <input
+            v-model="fetchModalUrl"
+            type="url"
+            class="input-bordered input w-full"
+            :placeholder="t('remoteConfigURLPlaceholder')"
+            :disabled="fetchingRemote"
+            @keydown.enter="fetchFromRemoteUrl"
+          />
+        </div>
+        <div class="modal-action">
+          <Button
+            class="btn-outline"
+            :disabled="fetchingRemote"
+            @click="closeFetchModal"
+          >
+            {{ t('cancel') }}
+          </Button>
+          <Button
+            class="btn-primary"
+            :loading="fetchingRemote"
+            :disabled="!fetchModalUrl"
+            @click="fetchFromRemoteUrl"
+          >
+            {{ t('confirm') }}
+          </Button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeFetchModal">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
