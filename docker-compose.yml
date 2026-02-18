@@ -1,0 +1,26 @@
+services:
+  metacubexd:
+    container_name: metacubexd
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mofeiss/metacubexd:local
+    restart: always
+    ports:
+      - '8088:80'
+    environment:
+      DEFAULT_BACKEND_URL: http://aliyun200m:9090
+    volumes:
+      - /opt/mihomo/config.yaml:/opt/mihomo/config.yaml
+
+  mihomo:
+    container_name: mihomo
+    image: docker.io/metacubex/mihomo:latest
+    restart: always
+    pid: host
+    network_mode: host
+    cap_add:
+      - ALL
+    volumes:
+      - /opt/mihomo/config.yaml:/root/.config/mihomo/config.yaml
+      - /dev/net/tun:/dev/net/tun
