@@ -130,6 +130,7 @@ const originalYamlContent = ref('')
 const yamlMtimeMs = ref<number | null>(null)
 const yamlLoading = ref(false)
 const yamlSaving = ref(false)
+const yamlReloading = ref(false)
 const yamlStatus = ref<{ type: YamlStatusType; message: string } | null>(null)
 
 const isYamlDirty = computed(
@@ -173,7 +174,7 @@ async function loadMihomoConfigFile() {
   }
 }
 
-async function saveMihomoConfigAndReload() {
+async function saveMihomoConfigFile() {
   if (!isYamlDirty.value) return
 
   yamlSaving.value = true
@@ -190,14 +191,23 @@ async function saveMihomoConfigAndReload() {
 
     originalYamlContent.value = yamlContent.value
     yamlMtimeMs.value = saveResult.mtimeMs
+    yamlStatus.value = {
+      type: 'success',
+      message: t('yamlEditorSaveSuccess'),
+    }
   } catch (error) {
     yamlStatus.value = {
       type: 'error',
       message: parseRequestErrorMessage(error, t('yamlEditorSaveFailed')),
     }
+  } finally {
     yamlSaving.value = false
-    return
   }
+}
+
+async function reloadMihomoCoreConfig() {
+  yamlReloading.value = true
+  yamlStatus.value = null
 
   try {
     const request = useRequest()
@@ -208,18 +218,18 @@ async function saveMihomoConfigAndReload() {
 
     yamlStatus.value = {
       type: 'success',
-      message: t('yamlEditorSaveAndReloadSuccess'),
+      message: t('yamlEditorReloadConfigSuccess'),
     }
   } catch (error) {
     yamlStatus.value = {
-      type: 'warning',
+      type: 'error',
       message: parseRequestErrorMessage(
         error,
-        t('yamlEditorSavedButReloadFailed'),
+        t('yamlEditorReloadConfigFailed'),
       ),
     }
   } finally {
-    yamlSaving.value = false
+    yamlReloading.value = false
   }
 }
 
@@ -270,18 +280,26 @@ onBeforeRouteLeave(() => {
             <Button
               class="btn-outline"
               :loading="yamlLoading"
-              :disabled="yamlSaving"
+              :disabled="yamlSaving || yamlReloading"
               @click="loadMihomoConfigFile"
             >
               {{ t('yamlEditorReloadFile') }}
             </Button>
             <Button
-              class="btn-primary"
+              class="btn-secondary"
               :loading="yamlSaving"
-              :disabled="yamlLoading || !isYamlDirty"
-              @click="saveMihomoConfigAndReload"
+              :disabled="yamlLoading || yamlReloading || !isYamlDirty"
+              @click="saveMihomoConfigFile"
             >
-              {{ t('yamlEditorSaveAndReload') }}
+              {{ t('yamlEditorSaveFile') }}
+            </Button>
+            <Button
+              class="btn-primary"
+              :loading="yamlReloading"
+              :disabled="yamlLoading || yamlSaving"
+              @click="reloadMihomoCoreConfig"
+            >
+              {{ t('reloadConfig') }}
             </Button>
           </div>
         </div>
@@ -305,7 +323,7 @@ onBeforeRouteLeave(() => {
           v-model="yamlContent"
           class="textarea-bordered textarea h-[320px] w-full font-mono text-sm leading-6"
           :placeholder="t('yamlEditorLoadingHint')"
-          :disabled="yamlLoading || yamlSaving"
+          :disabled="yamlLoading || yamlSaving || yamlReloading"
           spellcheck="false"
         />
 
