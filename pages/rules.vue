@@ -11,6 +11,14 @@ import {
 import { formatTimeFromNow, useStringBooleanMap } from '~/utils'
 
 const { t, locale } = useI18n()
+const mihomoConfigPath = '/opt/mihomo/config.yaml'
+
+interface MihomoConfigResponse {
+  content: string
+  mtimeMs: number
+}
+
+type YamlStatusType = 'success' | 'warning' | 'error'
 
 useHead({ title: computed(() => t('rules')) })
 
@@ -116,6 +124,113 @@ const rulesTotalSize = computed(() => rulesVirtualizer.value.getTotalSize())
 const providersTotalSize = computed(() =>
   providersVirtualizer.value.getTotalSize(),
 )
+
+const yamlContent = ref('')
+const originalYamlContent = ref('')
+const yamlMtimeMs = ref<number | null>(null)
+const yamlLoading = ref(false)
+const yamlSaving = ref(false)
+const yamlStatus = ref<{ type: YamlStatusType; message: string } | null>(null)
+
+const isYamlDirty = computed(
+  () => yamlContent.value !== originalYamlContent.value,
+)
+const yamlBytes = computed(
+  () => new TextEncoder().encode(yamlContent.value).length,
+)
+const yamlUpdatedLabel = computed(() =>
+  yamlMtimeMs.value ? new Date(yamlMtimeMs.value).toLocaleString() : '--',
+)
+
+function parseRequestErrorMessage(error: unknown, fallback: string) {
+  const err = error as {
+    data?: { statusMessage?: string }
+    statusMessage?: string
+    message?: string
+  }
+
+  return (
+    err?.data?.statusMessage || err?.statusMessage || err?.message || fallback
+  )
+}
+
+async function loadMihomoConfigFile() {
+  yamlLoading.value = true
+  yamlStatus.value = null
+
+  try {
+    const result = await $fetch<MihomoConfigResponse>('/api/mihomo-config')
+    yamlContent.value = result.content
+    originalYamlContent.value = result.content
+    yamlMtimeMs.value = result.mtimeMs
+  } catch (error) {
+    yamlStatus.value = {
+      type: 'error',
+      message: parseRequestErrorMessage(error, t('yamlEditorLoadFailed')),
+    }
+  } finally {
+    yamlLoading.value = false
+  }
+}
+
+async function saveMihomoConfigAndReload() {
+  if (!isYamlDirty.value) return
+
+  yamlSaving.value = true
+  yamlStatus.value = null
+
+  try {
+    const saveResult = await $fetch<{ ok: boolean; mtimeMs: number }>(
+      '/api/mihomo-config',
+      {
+        method: 'PUT',
+        body: { content: yamlContent.value },
+      },
+    )
+
+    originalYamlContent.value = yamlContent.value
+    yamlMtimeMs.value = saveResult.mtimeMs
+  } catch (error) {
+    yamlStatus.value = {
+      type: 'error',
+      message: parseRequestErrorMessage(error, t('yamlEditorSaveFailed')),
+    }
+    yamlSaving.value = false
+    return
+  }
+
+  try {
+    const request = useRequest()
+    await request.put('configs', {
+      searchParams: { force: true },
+      json: { path: '', payload: '' },
+    })
+
+    yamlStatus.value = {
+      type: 'success',
+      message: t('yamlEditorSaveAndReloadSuccess'),
+    }
+  } catch (error) {
+    yamlStatus.value = {
+      type: 'warning',
+      message: parseRequestErrorMessage(
+        error,
+        t('yamlEditorSavedButReloadFailed'),
+      ),
+    }
+  } finally {
+    yamlSaving.value = false
+  }
+}
+
+onMounted(() => {
+  loadMihomoConfigFile()
+})
+
+onBeforeRouteLeave(() => {
+  if (!import.meta.client || !isYamlDirty.value) return true
+  return window.confirm(t('yamlEditorUnsavedConfirm'))
+})
 </script>
 
 <template>
@@ -129,6 +244,83 @@ const providersTotalSize = computed(() =>
     </div>
 
     <template v-else>
+      <!-- YAML Editor -->
+      <div
+        class="animate-fade-slide-in rounded-xl border border-base-content/8 bg-base-200/60 p-4 backdrop-blur-sm"
+      >
+        <div
+          class="mb-3 flex flex-wrap items-start justify-between gap-3 border-b border-base-content/8 pb-3"
+        >
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base leading-[1.2] font-semibold text-base-content">
+              {{ t('yamlEditor') }}
+            </h2>
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ t('yamlEditorDescription') }}
+            </p>
+            <p class="mt-1 font-mono text-xs break-all text-base-content/55">
+              {{ t('yamlEditorPath') }}: {{ mihomoConfigPath }}
+            </p>
+            <p class="mt-1 text-xs text-base-content/55">
+              {{ t('updated') }}: {{ yamlUpdatedLabel }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <Button
+              class="btn-outline"
+              :loading="yamlLoading"
+              :disabled="yamlSaving"
+              @click="loadMihomoConfigFile"
+            >
+              {{ t('yamlEditorReloadFile') }}
+            </Button>
+            <Button
+              class="btn-primary"
+              :loading="yamlSaving"
+              :disabled="yamlLoading || !isYamlDirty"
+              @click="saveMihomoConfigAndReload"
+            >
+              {{ t('yamlEditorSaveAndReload') }}
+            </Button>
+          </div>
+        </div>
+
+        <div
+          v-if="yamlStatus"
+          class="mb-3 rounded-lg border px-3 py-2 text-sm"
+          :class="{
+            'border-success/25 bg-success/10 text-success':
+              yamlStatus.type === 'success',
+            'border-warning/25 bg-warning/10 text-warning':
+              yamlStatus.type === 'warning',
+            'border-error/25 bg-error/10 text-error':
+              yamlStatus.type === 'error',
+          }"
+        >
+          {{ yamlStatus.message }}
+        </div>
+
+        <textarea
+          v-model="yamlContent"
+          class="textarea-bordered textarea h-[320px] w-full font-mono text-sm leading-6"
+          :placeholder="t('yamlEditorLoadingHint')"
+          :disabled="yamlLoading || yamlSaving"
+          spellcheck="false"
+        />
+
+        <div
+          class="mt-2 flex items-center justify-between text-xs text-base-content/55"
+        >
+          <span>
+            {{
+              isYamlDirty ? t('yamlEditorUnsaved') : t('yamlEditorNoChanges')
+            }}
+          </span>
+          <span>{{ t('yamlEditorBytes', { count: yamlBytes }) }}</span>
+        </div>
+      </div>
+
       <!-- Header with Tabs and Search -->
       <div class="animate-fade-slide-in flex flex-wrap items-center gap-3">
         <!-- Tabs -->

@@ -213,5 +213,19 @@
   "useMobileBottomNav": "Нижняя навигация (мобильный)",
   "fetchRemoteConfig": "Загрузить удалённую конфигурацию",
   "remoteConfigURL": "URL удалённой конфигурации",
-  "remoteConfigURLPlaceholder": "Введите URL файла конфигурации"
+  "remoteConfigURLPlaceholder": "Введите URL файла конфигурации",
+  "yamlEditor": "Редактор YAML конфигурации",
+  "yamlEditorDescription": "Чтение и редактирование файла конфигурации Mihomo с перезагрузкой после сохранения",
+  "yamlEditorPath": "Путь к файлу конфигурации",
+  "yamlEditorReloadFile": "Перечитать файл",
+  "yamlEditorSaveAndReload": "Сохранить и перезагрузить",
+  "yamlEditorLoadingHint": "Загрузка файла конфигурации...",
+  "yamlEditorLoadFailed": "Не удалось загрузить файл конфигурации",
+  "yamlEditorSaveFailed": "Не удалось сохранить файл конфигурации",
+  "yamlEditorSaveAndReloadSuccess": "Конфигурация сохранена и перезагружена",
+  "yamlEditorSavedButReloadFailed": "Конфигурация сохранена, но перезагрузка не удалась. Проверьте логи ядра.",
+  "yamlEditorUnsavedConfirm": "Есть несохранённые изменения YAML. Покинуть страницу?",
+  "yamlEditorUnsaved": "Есть несохранённые изменения",
+  "yamlEditorNoChanges": "Нет несохранённых изменений",
+  "yamlEditorBytes": "Байт: {count}"
 }
