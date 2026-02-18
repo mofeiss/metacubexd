@@ -1,10 +1,7 @@
 services:
   metacubexd:
     container_name: metacubexd
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: mofeiss/metacubexd:local
+    image: ${METACUBEXD_IMAGE:-ghcr.io/mofeiss/metacubexd:latest}
     restart: always
     ports:
       - '8088:80'

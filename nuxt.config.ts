@@ -29,7 +29,7 @@ export default defineNuxtConfig({
   },
 
   // Modules
-  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxtjs/i18n', '@nuxt/fonts'],
+  modules: ['@vueuse/nuxt', '@pinia/nuxt', '@nuxtjs/i18n'],
 
   // i18n configuration
   i18n: {
@@ -45,23 +45,6 @@ export default defineNuxtConfig({
       useCookie: true,
       cookieKey: 'metacubexd_lang',
       fallbackLocale: 'en',
-    },
-  },
-
-  // Fonts configuration - using Ubuntu font
-  fonts: {
-    families: [
-      {
-        name: 'Ubuntu',
-        provider: 'google',
-        weights: [300, 400, 500, 700],
-        styles: ['normal', 'italic'],
-      },
-    ],
-    defaults: {
-      weights: [400, 700],
-      styles: ['normal'],
-      subsets: ['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext'],
     },
   },
 

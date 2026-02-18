@@ -1,1 +1,9 @@
 node_modules
+.git
+.nuxt
+.output
+.omc
+.vscode
+.claude
+coverage
+dist
