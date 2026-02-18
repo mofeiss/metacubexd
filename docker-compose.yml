@@ -1,7 +1,7 @@
 services:
   metacubexd:
     container_name: metacubexd
-    image: ${METACUBEXD_IMAGE:-ghcr.io/mofeiss/metacubexd:latest}
+    image: ghcr.io/mofeiss/metacubexd:latest
     restart: always
     ports:
       - '8088:80'

@@ -1,4 +1,4 @@
-FROM docker.io/node:alpine AS builder
+FROM docker.m.daocloud.io/library/node:alpine AS builder
 
 USER root
 ENV PNPM_HOME=/pnpm
@@ -14,7 +14,7 @@ RUN corepack install
 RUN pnpm install
 RUN pnpm build
 
-FROM docker.io/node:alpine
+FROM docker.m.daocloud.io/library/node:alpine
 
 ENV PORT=80
 EXPOSE 80
